@@ -129,5 +129,32 @@ module MegaMutex
         assert @exception.is_a?(MegaMutex::TimeoutError), "Expected TimeoutError to be raised, but wasn't"
       end
     end
+
+    describe "with an expiry", :focus => true do
+
+      before(:each) do
+        MemCache.new('localhost').delete(mutex_id)
+      end
+
+      def mutex_id
+        'foo'
+      end
+
+      it "should be able to lock again after the expiry time" do
+        pid = fork do
+          with_distributed_mutex(mutex_id, :expires_in => 1) { sleep 10 }
+        end
+
+        sleep 0.25
+
+        @mutex_entered = false
+        assert_nothing_raised do
+          with_distributed_mutex(mutex_id, :timeout => 3) { @mutex_entered = true }
+        end
+        assert @mutex_entered
+
+        Process.kill('HUP', pid)
+      end
+    end
   end
 end

@@ -57,7 +57,7 @@ module MegaMutex
   #     do_something!
   #   end
   def with_distributed_mutex(mutex_id, options = {}, &block)
-    mutex = DistributedMutex.new(mutex_id, options[:timeout])
+    mutex = DistributedMutex.new(mutex_id, options[:timeout], options[:expires_in])
     begin
       mutex.run(&block)
     rescue Object => e
@@ -86,11 +86,12 @@ module MegaMutex
   end
 
   class Configuration
-    attr_accessor :memcache_servers, :namespace
+    attr_accessor :memcache_servers, :namespace, :expires_in
 
     def initialize
       @memcache_servers = 'localhost'
       @namespace = 'mega_mutex'
+      @expires_in = nil
     end
   end
 
