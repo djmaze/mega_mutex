@@ -1,0 +1,22 @@
+version: "3.4"
+
+services:
+  app:
+    build: .
+    command: rspec
+    environment:
+      MEMCACHED_SERVER: memcached
+    volumes:
+      - .:/usr/src/app
+    networks:
+      - backend
+    depends_on:
+      - memcached
+
+  memcached:
+    image: memcached
+    networks:
+      - backend
+
+networks:
+  backend:

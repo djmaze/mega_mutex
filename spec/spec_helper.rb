@@ -30,5 +30,5 @@ RSpec.configure do |config|
 end
 
 MegaMutex.configure do |config|
-  config.memcache_servers = ['localhost']
+  config.memcache_servers = [ENV.fetch('MEMCACHED_SERVER', 'localhost')]
 end
