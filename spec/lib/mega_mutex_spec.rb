@@ -13,7 +13,7 @@ module MegaMutex
     describe "#with_distributed_mutex" do
       it "returns the value returned by the block" do
         result = with_distributed_mutex("foo-#{rand(1000000)}") { 12345 }
-        result.should == 12345
+        expect(result).to eq 12345
       end
     end
 
@@ -33,13 +33,13 @@ module MegaMutex
           threads << Thread.new(&@mutually_exclusive_block)
           threads << Thread.new(&@mutually_exclusive_block)
           wait_for_threads_to_finish
-          @errors.should_not be_empty
+          expect(@errors).not_to be_empty
         end
       end
 
       describe "with the same lock key" do
         before(:each) do
-          Dalli::Client.new('localhost').delete(mutex_id)
+          Dalli::Client.new(MegaMutex.configuration.memcache_servers).delete(mutex_id)
         end
 
         def mutex_id
@@ -53,7 +53,7 @@ module MegaMutex
                 threads << Thread.new{ with_distributed_mutex(mutex_id, &@mutually_exclusive_block) }
               end
               wait_for_threads_to_finish
-              @errors.should be_empty
+              expect(@errors).to be_empty
             end
           end
         end
@@ -70,7 +70,7 @@ module MegaMutex
             with_distributed_mutex(mutex_id) do
               @success = true
             end
-            @success.should be_true
+            expect(@success).to be_truthy
           end
         end
 
@@ -126,14 +126,14 @@ module MegaMutex
           end
         end
         wait_for_threads_to_finish
-        assert @exception.is_a?(MegaMutex::TimeoutError), "Expected TimeoutError to be raised, but wasn't"
+        expect(@exception).to be_an_instance_of(MegaMutex::TimeoutError)
       end
     end
 
-    describe "with an expiry", :focus => true do
+    describe "with an expiry" do
 
       before(:each) do
-        MemCache.new('localhost').delete(mutex_id)
+        Dalli::Client.new(MegaMutex.configuration.memcache_servers).delete(mutex_id)
       end
 
       def mutex_id
@@ -148,10 +148,10 @@ module MegaMutex
         sleep 0.25
 
         @mutex_entered = false
-        assert_nothing_raised do
+        expect do
           with_distributed_mutex(mutex_id, :timeout => 3) { @mutex_entered = true }
-        end
-        assert @mutex_entered
+        end.to_not raise_exception
+        expect(@mutex_entered).to be_truthy
 
         Process.kill('HUP', pid)
       end
